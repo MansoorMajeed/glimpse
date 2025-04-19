@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"os"
 	"time"
 
 	"github.com/mansoormajeed/glimpse/internal/common/logger"
@@ -17,24 +16,22 @@ type Metrics struct {
 	DiskUsage       int32
 	NetworkUpload   int32
 	NetworkDownload int32
+	DiskReadKB      int32
+	DiskWriteKB     int32
 	CPUTemp         int32
+	Uptime          int32 // Uptime in seconds
 }
 
 type AgentHeartbeat struct {
 	Hostname     string
+	OS           string
 	Metrics      Metrics
-	LastSeen     time.Time
-	ConnectedFor time.Duration
+	LastSeen     int32 // Last seen in seconds
+	ConnectedFor int32 // Connected for in seconds
 }
 
-func GetAgentMetrics() (AgentHeartbeat, error) {
-	hostname, err := os.Hostname()
-	if err != nil {
-		logger.Errorf("Error getting hostname: %v", err)
-		return AgentHeartbeat{}, err
-	}
+func GetAgentMetrics() (Metrics, error) {
 
-	uptime := GetHostUptime()
 	cpuUsage := GetCPUUsage()
 	memoryUsage := GetMemoryUsage()
 	diskUsage := GetDiskUsage()
@@ -47,24 +44,20 @@ func GetAgentMetrics() (AgentHeartbeat, error) {
 		DiskUsage:       diskUsage,
 		NetworkUpload:   networkUpload,
 		NetworkDownload: networkDownload,
+		DiskReadKB:      0, // Placeholder for disk read KB
+		DiskWriteKB:     0, // Placeholder for disk write KB
 		CPUTemp:         cpuTemp,
 	}
-
-	return AgentHeartbeat{
-		Hostname:     hostname,
-		Metrics:      metrics,
-		LastSeen:     time.Now(),
-		ConnectedFor: uptime,
-	}, nil
+	return metrics, nil
 }
 
-func GetHostUptime() time.Duration {
+func GetHostUptime() int32 {
 	uptime, err := host.Uptime()
 	if err != nil {
 		logger.Errorf("Error getting uptime: %v", err)
 		return 0
 	}
-	return time.Duration(uptime) * time.Second
+	return int32(uptime)
 }
 
 func GetCPUUsage() int32 {

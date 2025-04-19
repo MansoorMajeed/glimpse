@@ -6,8 +6,9 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 
+	"github.com/mansoormajeed/glimpse/internal/agent/grpcclient"
+	"github.com/mansoormajeed/glimpse/internal/agent/heartbeat"
 	"github.com/mansoormajeed/glimpse/internal/common/logger"
 )
 
@@ -41,21 +42,12 @@ func main() {
 
 func run(ctx context.Context) {
 
-	go func() {
-
-		ticker := time.NewTicker(5 * time.Second)
-		defer ticker.Stop()
-		for {
-			select {
-			case <-ctx.Done():
-				logger.Infof("Agent is shutting down...")
-				return
-			case <-ticker.C:
-				// Simulate work
-				logger.Infof("Agent is working...")
-			}
-		}
-	}()
+	grpcClient, err := grpcclient.NewGlimpseServiceClient()
+	if err != nil {
+		logger.Errorf("Error creating gRPC client: %v", err)
+		return
+	}
+	heartbeatService := heartbeat.NewHeartbeatService(grpcClient)
 }
 
 func setupSignalHandling(cancel context.CancelFunc) {
