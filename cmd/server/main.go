@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 
-	"github.com/mansoormajeed/glimpse/internal/logger"
+	"github.com/mansoormajeed/glimpse/internal/common/logger"
 )
 
 func main() {
