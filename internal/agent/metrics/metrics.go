@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"strings"
 	"time"
 
 	"github.com/mansoormajeed/glimpse/internal/common/logger"
@@ -158,21 +159,68 @@ func GetDiskIO() (int64, int64) {
 	return int64(readRate / 1024), int64(writeRate / 1024) // in KB/s
 }
 
-func GetCPUTemperature() int64 {
+// func GetCPUTemperature() int64 {
 
+// 	temps, err := host.SensorsTemperatures()
+// 	if err != nil || len(temps) == 0 {
+// 		logger.Errorf("Error getting CPU temperature: %v", err)
+// 		return 0
+// 	}
+
+// 	for _, t := range temps {
+// 		if t.SensorKey == "Package id 0" || t.SensorKey == "Tctl" || t.SensorKey == "Core 0" {
+// 			return int64(t.Temperature)
+// 		}
+// 	}
+
+// 	// Fallback to the first temperature reading if specific sensor not found
+// 	// probably wrong -- tomorrow's problem
+// 	return int64(temps[0].Temperature)
+// }
+
+// This is tough. The sensor names are very inconsistent across hardware and platforms.
+// So here's the approach I'm taking:
+//  1. Try to find temperature sensors whose keys contain common CPU-related terms
+//     like "cpu", "core", "package", or "tctl" (case-insensitive).
+//  2. If multiple CPU-like sensors are found, pick the one with the highest temperature.
+//     This gives a conservative estimate and avoids underreporting.
+//  3. If no CPU-like sensors are found, fall back to the highest temperature across all sensors.
+//     This isn't perfect, but avoids returning something irrelevant like NVMe or USB temps.
+//  4. Long-term: this could be made configurable, or use smarter detection per hardware/vendor.
+func GetCPUTemperature() int64 {
 	temps, err := host.SensorsTemperatures()
 	if err != nil || len(temps) == 0 {
 		logger.Errorf("Error getting CPU temperature: %v", err)
 		return 0
 	}
 
+	var bestTemp float64
+	var found bool
+
 	for _, t := range temps {
-		if t.SensorKey == "Package id 0" || t.SensorKey == "Tctl" || t.SensorKey == "Core 0" {
-			return int64(t.Temperature)
+		key := strings.ToLower(t.SensorKey)
+		if strings.Contains(key, "cpu") ||
+			strings.Contains(key, "core") ||
+			strings.Contains(key, "package") ||
+			strings.Contains(key, "tctl") {
+			if t.Temperature > bestTemp || !found {
+				bestTemp = t.Temperature
+				found = true
+			}
 		}
 	}
 
-	// Fallback to the first temperature reading if specific sensor not found
-	// probably wrong -- tomorrow's problem
-	return int64(temps[0].Temperature)
+	if found {
+		return int64(bestTemp)
+	}
+
+	// fallback: max of all temps
+	maxTemp := temps[0].Temperature
+	for _, t := range temps {
+		if t.Temperature > maxTemp {
+			maxTemp = t.Temperature
+		}
+	}
+
+	return int64(maxTemp)
 }
