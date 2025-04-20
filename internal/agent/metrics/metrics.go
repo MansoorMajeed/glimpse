@@ -33,6 +33,8 @@ type AgentHeartbeat struct {
 
 var nwPreviousUpload, nwPreviousDownload uint64
 var nwPreviousTime time.Time
+var diskPrevReadBytes, diskPrevWriteBytes uint64
+var diskPrevTime time.Time
 
 func GetAgentMetrics() (Metrics, error) {
 
@@ -42,6 +44,7 @@ func GetAgentMetrics() (Metrics, error) {
 	networkUpload, networkDownload := GetNetworkUsage()
 	cpuTemp := GetCPUTemperature()
 	diskReadKB, diskWriteKB := GetDiskIO()
+	uptime := GetHostUptime()
 
 	metrics := Metrics{
 		CPUUsage:        cpuUsage,
@@ -52,6 +55,7 @@ func GetAgentMetrics() (Metrics, error) {
 		DiskReadKB:      diskReadKB,
 		DiskWriteKB:     diskWriteKB,
 		CPUTemp:         cpuTemp,
+		Uptime:          uptime,
 	}
 	return metrics, nil
 }
@@ -123,7 +127,6 @@ func GetNetworkUsage() (int64, int64) {
 }
 
 func GetDiskIO() (int64, int64) {
-
 	ioStats, err := disk.IOCounters()
 	if err != nil {
 		logger.Errorf("Error getting disk IO: %v", err)
@@ -132,11 +135,27 @@ func GetDiskIO() (int64, int64) {
 
 	var readBytes, writeBytes uint64
 	for _, stat := range ioStats {
-		readBytes += stat.ReadCount
-		writeBytes += stat.WriteCount
+		readBytes += stat.ReadBytes
+		writeBytes += stat.WriteBytes
 	}
 
-	return int64(readBytes / 1024), int64(writeBytes / 1024) // convert to KB
+	now := time.Now()
+	delta := now.Sub(diskPrevTime).Seconds()
+	diskPrevTime = now
+
+	if diskPrevReadBytes == 0 {
+		diskPrevReadBytes = readBytes
+		diskPrevWriteBytes = writeBytes
+		return 0, 0 // Skip first sample
+	}
+
+	readRate := float64(readBytes-diskPrevReadBytes) / delta
+	writeRate := float64(writeBytes-diskPrevWriteBytes) / delta
+
+	diskPrevReadBytes = readBytes
+	diskPrevWriteBytes = writeBytes
+
+	return int64(readRate / 1024), int64(writeRate / 1024) // in KB/s
 }
 
 func GetCPUTemperature() int64 {
