@@ -9,28 +9,28 @@ service GlimpseService {
 }
 
 message AgentMetrics {
-    int32 cpu_usage = 1;
-    int32 memory_usage = 2;
-    int32 disk_usage = 3;
-    int32 network_upload = 4;
-    int32 network_download = 5;
-    int32 disk_read = 6;
-    int32 disk_write = 7;
-    int32 cpu_temp = 8;
-    int32 uptime = 9;
+    int64 cpu_usage = 1;
+    int64 memory_usage = 2;
+    int64 disk_usage = 3;
+    int64 network_upload = 4;
+    int64 network_download = 5;
+    int64 disk_read = 6;
+    int64 disk_write = 7;
+    int64 cpu_temp = 8;
+    int64 uptime = 9;
 }
 
 message HeartbeatRequest {
     string hostname = 1;
     AgentMetrics metrics = 2;
     string os = 3;
-    int32 last_seen = 4;
-    int32 connected_for = 5;
+    int64 last_seen = 4;
+    int64 connected_for = 5;
 }
 
 message HeartbeatResponse {
     string message = 1;
     bool success = 2;
-    int32 status_code = 3;
+    int64 status_code = 3;
     string error_message = 4;
 }
