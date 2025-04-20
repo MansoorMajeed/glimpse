@@ -9,7 +9,7 @@ import (
 
 func (s *GlimpseServer) Heartbeat(ctx context.Context, req *pb.HeartbeatRequest) (*pb.HeartbeatResponse, error) {
 	// Log the heartbeat request
-	logger.Infof("Received heartbeat from agent: %s", req.Hostname)
+	logger.Debugf("Received heartbeat : %v", req)
 
 	resp := &pb.HeartbeatResponse{
 		Message:      "Heartbeat received",
