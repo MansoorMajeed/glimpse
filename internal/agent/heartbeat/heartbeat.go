@@ -9,6 +9,7 @@ import (
 
 	m "github.com/mansoormajeed/glimpse/internal/agent/metrics"
 	"github.com/mansoormajeed/glimpse/internal/common/logger"
+	"github.com/mansoormajeed/glimpse/internal/common/logger/util"
 
 	pb "github.com/mansoormajeed/glimpse/pkg/pb/proto"
 )
@@ -27,7 +28,7 @@ func (h *HeartbeatService) Start(ctx context.Context) {
 
 	logger.Info("Starting Heartbeat Service...")
 	go func() {
-		ticker := time.NewTicker(5 * time.Second)
+		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
 		for {
 			select {
@@ -72,7 +73,8 @@ func (h *HeartbeatService) SendHeartbeat() error {
 			CpuTemp:         metrics.CPUTemp,
 		},
 	}
-	logger.Debugf("Sending heartbeat request: %+v", req)
+	logger.Info("Sending heartbeat request.... Hostname: ", hostname)
+	logger.Debugf(util.PrettyYaml(req))
 
 	resp, err := h.client.Heartbeat(context.Background(), req)
 	if err != nil {

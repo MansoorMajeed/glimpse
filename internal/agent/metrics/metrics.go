@@ -8,6 +8,7 @@ import (
 	"github.com/shirou/gopsutil/disk"
 	"github.com/shirou/gopsutil/host"
 	"github.com/shirou/gopsutil/mem"
+	"github.com/shirou/gopsutil/net"
 )
 
 type Metrics struct {
@@ -30,6 +31,9 @@ type AgentHeartbeat struct {
 	ConnectedFor int64 // Connected for in seconds
 }
 
+var nwPreviousUpload, nwPreviousDownload uint64
+var nwPreviousTime time.Time
+
 func GetAgentMetrics() (Metrics, error) {
 
 	cpuUsage := GetCPUUsage()
@@ -37,6 +41,7 @@ func GetAgentMetrics() (Metrics, error) {
 	diskUsage := GetDiskUsage()
 	networkUpload, networkDownload := GetNetworkUsage()
 	cpuTemp := GetCPUTemperature()
+	diskReadKB, diskWriteKB := GetDiskIO()
 
 	metrics := Metrics{
 		CPUUsage:        cpuUsage,
@@ -44,8 +49,8 @@ func GetAgentMetrics() (Metrics, error) {
 		DiskUsage:       diskUsage,
 		NetworkUpload:   networkUpload,
 		NetworkDownload: networkDownload,
-		DiskReadKB:      0, // Placeholder for disk read KB
-		DiskWriteKB:     0, // Placeholder for disk write KB
+		DiskReadKB:      diskReadKB,
+		DiskWriteKB:     diskWriteKB,
 		CPUTemp:         cpuTemp,
 	}
 	return metrics, nil
@@ -87,18 +92,68 @@ func GetDiskUsage() int64 {
 	return int64(diskUsage.UsedPercent)
 }
 func GetNetworkUsage() (int64, int64) {
-	// Placeholder values for network upload and download
-	// In a real implementation, you would use a library to get actual network stats
-	upload := int64(0)
-	download := int64(0)
 
-	return upload, download
+	// sum the bytes sent and received across all network interfaces
+	counters, err := net.IOCounters(false)
+	if err != nil || len(counters) == 0 {
+		logger.Errorf("Error getting network usage: %v", err)
+		return 0, 0
+	}
+
+	now := time.Now()
+	duration := now.Sub(nwPreviousTime).Seconds()
+	nwPreviousTime = now
+
+	upload := counters[0].BytesSent
+	download := counters[0].BytesRecv
+
+	if nwPreviousUpload == 0 {
+		nwPreviousUpload = upload
+		nwPreviousDownload = download
+		return 0, 0 // first call, no previous data
+	}
+
+	uploadRate := float64(upload-nwPreviousUpload) / duration
+	downloadRate := float64(download-nwPreviousDownload) / duration
+
+	nwPreviousUpload = upload
+	nwPreviousDownload = download
+
+	return int64(uploadRate / 1024), int64(downloadRate / 1024) // convert to KB
+}
+
+func GetDiskIO() (int64, int64) {
+
+	ioStats, err := disk.IOCounters()
+	if err != nil {
+		logger.Errorf("Error getting disk IO: %v", err)
+		return 0, 0
+	}
+
+	var readBytes, writeBytes uint64
+	for _, stat := range ioStats {
+		readBytes += stat.ReadCount
+		writeBytes += stat.WriteCount
+	}
+
+	return int64(readBytes / 1024), int64(writeBytes / 1024) // convert to KB
 }
 
 func GetCPUTemperature() int64 {
-	// Placeholder value for CPU temperature
-	// In a real implementation, you would use a library to get actual CPU temperature
-	temp := int64(0)
 
-	return temp
+	temps, err := host.SensorsTemperatures()
+	if err != nil || len(temps) == 0 {
+		logger.Errorf("Error getting CPU temperature: %v", err)
+		return 0
+	}
+
+	for _, t := range temps {
+		if t.SensorKey == "Package id 0" || t.SensorKey == "Tctl" || t.SensorKey == "Core 0" {
+			return int64(t.Temperature)
+		}
+	}
+
+	// Fallback to the first temperature reading if specific sensor not found
+	// probably wrong -- tomorrow's problem
+	return int64(temps[0].Temperature)
 }
