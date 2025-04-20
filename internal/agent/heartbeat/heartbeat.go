@@ -71,6 +71,7 @@ func (h *HeartbeatService) SendHeartbeat() error {
 			CpuTemp:         metrics.CPUTemp,
 		},
 	}
+	logger.Debugf("Sending heartbeat request: %+v", req)
 
 	resp, err := h.client.Heartbeat(context.Background(), req)
 	if err != nil {

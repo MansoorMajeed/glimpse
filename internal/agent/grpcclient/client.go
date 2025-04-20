@@ -11,7 +11,9 @@ type GlimpseServiceClient struct {
 
 func NewGlimpseServiceClient() (*GlimpseServiceClient, error) {
 
-	conn, err := grpc.Dial("localhost:5001")
+	var opts []grpc.DialOption
+
+	conn, err := grpc.NewClient("localhost:5001", opts...)
 	if err != nil {
 		return nil, err
 	}

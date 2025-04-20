@@ -4,6 +4,7 @@ import (
 	"flag"
 
 	"github.com/mansoormajeed/glimpse/internal/common/logger"
+	"github.com/mansoormajeed/glimpse/internal/server"
 )
 
 func main() {
@@ -19,4 +20,6 @@ func main() {
 	logger.Info("Starting the server...")
 	logger.Debugf("Listening on port: %d", *listenPort)
 
+	// Start the gRPC server
+	server.StartGRPCServer()
 }

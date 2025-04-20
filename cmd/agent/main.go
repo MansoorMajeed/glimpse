@@ -7,9 +7,11 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/mansoormajeed/glimpse/internal/agent/grpcclient"
 	"github.com/mansoormajeed/glimpse/internal/agent/heartbeat"
 	"github.com/mansoormajeed/glimpse/internal/common/logger"
+	pb "github.com/mansoormajeed/glimpse/pkg/pb/proto"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
 func main() {
@@ -42,12 +44,18 @@ func main() {
 
 func run(ctx context.Context) {
 
-	grpcClient, err := grpcclient.NewGlimpseServiceClient()
+	var opts []grpc.DialOption
+	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+
+	conn, err := grpc.NewClient("localhost:5001", opts...)
 	if err != nil {
 		logger.Errorf("Error creating gRPC client: %v", err)
 		return
 	}
-	heartbeatService := heartbeat.NewHeartbeatService(grpcClient)
+	defer conn.Close()
+	client := pb.NewGlimpseServiceClient(conn)
+	heartbeatService := heartbeat.NewHeartbeatService(client)
+	heartbeatService.Start(ctx)
 }
 
 func setupSignalHandling(cancel context.CancelFunc) {
