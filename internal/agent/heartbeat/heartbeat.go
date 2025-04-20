@@ -44,6 +44,7 @@ func (h *HeartbeatService) Start(ctx context.Context) {
 			}
 		}
 	}()
+	<-ctx.Done()
 }
 
 func (h *HeartbeatService) SendHeartbeat() error {
