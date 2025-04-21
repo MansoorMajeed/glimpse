@@ -14,6 +14,7 @@ type MetricEntry struct {
 }
 
 type AgentData struct {
+	AgentID      string
 	Hostname     string
 	OS           string
 	LastSeen     time.Time
@@ -45,6 +46,7 @@ func (s *ServerStore) AddOrUpdateAgent(req *pb.HeartbeatRequest) {
 	if !exists {
 		logger.Debugf("Creating new agent entry for: %s", req.Hostname)
 		agent = &AgentData{
+			AgentID:        req.AgentId,
 			Hostname:       req.Hostname,
 			OS:             req.Os,
 			MetricsHistory: make([]MetricEntry, s.bufferSize),

@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/mansoormajeed/glimpse/internal/agent/agentid"
 	m "github.com/mansoormajeed/glimpse/internal/agent/metrics"
 	"github.com/mansoormajeed/glimpse/internal/common/logger"
 	"github.com/mansoormajeed/glimpse/internal/common/logger/util"
@@ -18,6 +19,8 @@ type HeartbeatService struct {
 	client pb.GlimpseServiceClient
 }
 
+var agentID string
+
 func NewHeartbeatService(client pb.GlimpseServiceClient) *HeartbeatService {
 	return &HeartbeatService{
 		client: client,
@@ -27,6 +30,7 @@ func NewHeartbeatService(client pb.GlimpseServiceClient) *HeartbeatService {
 func (h *HeartbeatService) Start(ctx context.Context) {
 
 	logger.Info("Starting Heartbeat Service...")
+	agentID = agentid.LoadOrGenerateAgentID()
 	go func() {
 		ticker := time.NewTicker(1 * time.Second)
 		defer ticker.Stop()
@@ -62,6 +66,7 @@ func (h *HeartbeatService) SendHeartbeat() error {
 	req := &pb.HeartbeatRequest{
 		Hostname: hostname,
 		Os:       os,
+		AgentId:  agentID,
 		Metrics: &pb.AgentMetrics{
 			CpuUsage:        metrics.CPUUsage,
 			MemoryUsage:     metrics.MemoryUsage,

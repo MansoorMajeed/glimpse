@@ -28,6 +28,7 @@ message HeartbeatRequest {
     string os = 3;
     int64 last_seen = 4;
     int64 connected_for = 5;
+    string agent_id = 6; // unique persistent id for the agent
 }
 
 message HeartbeatResponse {

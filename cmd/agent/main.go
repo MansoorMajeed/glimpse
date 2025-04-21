@@ -29,6 +29,7 @@ func main() {
 		logger.Errorf("Error getting hostname: %v", err)
 		return
 	}
+
 	logger.Infof("Starting the agent on host: %s", hostname)
 
 	ctx, cancel := context.WithCancel(context.Background())
