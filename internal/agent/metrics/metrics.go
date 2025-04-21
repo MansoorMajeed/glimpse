@@ -28,8 +28,8 @@ type AgentHeartbeat struct {
 	Hostname     string
 	OS           string
 	Metrics      Metrics
-	LastSeen     int64 // Last seen in seconds
-	ConnectedFor int64 // Connected for in seconds
+	LastSeen     time.Time
+	ConnectedFor time.Duration
 }
 
 var nwPreviousUpload, nwPreviousDownload uint64
