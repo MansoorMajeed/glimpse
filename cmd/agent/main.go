@@ -48,7 +48,13 @@ func run(ctx context.Context) {
 	var opts []grpc.DialOption
 	opts = append(opts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 
-	conn, err := grpc.NewClient("localhost:5001", opts...)
+	serverAddress := os.Getenv("SERVER_ADDRESS")
+	if serverAddress == "" {
+		logger.Errorf("SERVER_ADDRESS is not set. Using localhost:5001")
+		serverAddress = "localhost:5001"
+	}
+
+	conn, err := grpc.NewClient(serverAddress, opts...)
 	if err != nil {
 		logger.Errorf("Error creating gRPC client: %v", err)
 		return

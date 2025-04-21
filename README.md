@@ -18,3 +18,10 @@ Honestly, I did try to make something via vibe-coding. I am too much of a contro
 ## Overview
 
 Agent runs on each host, connects to the server over GRPC to send metrics. There is no storage (only in memory short term storage). I am not re-writing prometheus.
+
+
+## Running
+
+```
+./docker/build.sh
+```
