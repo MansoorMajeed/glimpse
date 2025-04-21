@@ -16,9 +16,9 @@ type GlimpseServer struct {
 }
 
 // NewGlimpseServer creates a new instance of GlimpseServer
-func NewGlimpseServer() *GlimpseServer {
+func NewGlimpseServer(store *ServerStore) *GlimpseServer {
 	return &GlimpseServer{
-		store: NewServerStore(5), // for now use buffer 5. later change to 60
+		store: store, // for now use buffer 5. later change to 60
 	}
 }
 
@@ -39,7 +39,7 @@ func (s *GlimpseServer) Heartbeat(ctx context.Context, req *pb.HeartbeatRequest)
 	return resp, nil
 }
 
-func StartGRPCServer() {
+func StartGRPCServer(store *ServerStore) {
 	logger.Info("Starting gRPC server on port 5001...")
 	lis, err := net.Listen("tcp", ":5001")
 
@@ -48,7 +48,8 @@ func StartGRPCServer() {
 	}
 
 	grpcServer := grpc.NewServer()
-	pb.RegisterGlimpseServiceServer(grpcServer, NewGlimpseServer())
+	glimpseServer := NewGlimpseServer(store)
+	pb.RegisterGlimpseServiceServer(grpcServer, glimpseServer)
 
 	if err := grpcServer.Serve(lis); err != nil {
 		logger.Fatalf("Failed to serve: %v", err)

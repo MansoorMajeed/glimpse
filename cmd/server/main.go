@@ -20,6 +20,11 @@ func main() {
 	logger.Info("Starting the server...")
 	logger.Debugf("Listening on port: %d", *listenPort)
 
+	store := server.NewServerStore(5) // for now use buffer 5. later change to 60
+
+	server.StartHTTPServer(store)
+
 	// Start the gRPC server
-	server.StartGRPCServer()
+	server.StartGRPCServer(store)
+
 }

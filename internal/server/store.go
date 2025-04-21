@@ -71,6 +71,19 @@ func (s *ServerStore) AddOrUpdateAgent(req *pb.HeartbeatRequest) {
 	logger.Debugf("added to the index: %d", agent.metricsIndex)
 }
 
+func (s *ServerStore) GetAllAgents() []*AgentData {
+	s.Lock()
+	defer s.Unlock()
+
+	agentList := make([]*AgentData, 0, len(s.agents))
+	for _, agent := range s.agents {
+		// Return a copy of the agent data to prevent external modification
+		agentCopy := *agent
+		agentList = append(agentList, &agentCopy)
+	}
+	return agentList
+}
+
 func (s *ServerStore) GetAgentData(agentId string) (*AgentData, bool) {
 	s.Lock()
 	defer s.Unlock()
@@ -83,4 +96,12 @@ func (s *ServerStore) GetAgentData(agentId string) (*AgentData, bool) {
 	// Return a copy of the agent data to prevent external modification
 	agentCopy := *agent
 	return &agentCopy, true
+}
+
+func (a *AgentData) Latest() *pb.AgentMetrics {
+	if a.metricsCount == 0 {
+		return nil
+	}
+	idx := (a.metricsIndex - 1 + len(a.MetricsHistory)) % len(a.MetricsHistory)
+	return a.MetricsHistory[idx].Metrics
 }

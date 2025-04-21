@@ -1,0 +1,13 @@
+{{ range . }}
+<div class="agent-card">
+    <strong>{{ .Hostname }}</strong> ({{ .OS }})<br>
+    Last seen: {{ .LastSeen }}<br>
+    CPU: {{ .Metrics.CpuUsage }}%
+    Mem: {{ .Metrics.MemoryUsage }}%
+    Disk: {{ .Metrics.DiskUsage }}%
+    Net ↑ {{ .Metrics.NetworkUpload }} KB/s ↓ {{ .Metrics.NetworkDownload }} KB/s
+
+</div>
+{{ else }}
+<div>No agents currently online.</div>
+{{ end }}
