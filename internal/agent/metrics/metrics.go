@@ -63,6 +63,7 @@ func GetAgentMetrics() (Metrics, error) {
 
 func GetHostUptime() int64 {
 	uptime, err := host.Uptime()
+	logger.Debugf("Uptime: %v", uptime)
 	if err != nil {
 		logger.Errorf("Error getting uptime: %v", err)
 		return 0

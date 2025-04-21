@@ -14,10 +14,11 @@ var templateFS embed.FS
 var templates = template.Must(template.ParseFS(templateFS, "templates/*.html"))
 
 type DashboardAgent struct {
-	Hostname string
-	OS       string
-	LastSeen string
-	Metrics  *pb.AgentMetrics
+	Hostname        string
+	OS              string
+	LastSeenAgo     string
+	FormattedUptime string
+	Metrics         *pb.AgentMetrics
 }
 
 func StartHTTPServer(store *ServerStore) {
@@ -36,10 +37,11 @@ func StartHTTPServer(store *ServerStore) {
 				continue
 			}
 			agentList = append(agentList, DashboardAgent{
-				Hostname: a.Hostname,
-				OS:       a.OS,
-				LastSeen: a.LastSeen.Format("15:04:05"),
-				Metrics:  latest,
+				Hostname:        a.Hostname,
+				OS:              a.OS,
+				LastSeenAgo:     formatRelative(a.LastSeen),
+				Metrics:         latest,
+				FormattedUptime: formatUptime(latest.Uptime),
 			})
 		}
 

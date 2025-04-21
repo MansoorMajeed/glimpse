@@ -1,12 +1,12 @@
 {{ range . }}
 <div class="agent-card">
     <strong>{{ .Hostname }}</strong> ({{ .OS }})<br>
-    Last seen: {{ .LastSeen }}<br>
+    Last seen: {{ .LastSeenAgo }}<br>
     CPU: {{ .Metrics.CpuUsage }}% | Mem: {{ .Metrics.MemoryUsage }}% | Disk: {{ .Metrics.DiskUsage }}% <br>
     Net ↑ {{ .Metrics.NetworkUpload }} KB/s ↓ {{ .Metrics.NetworkDownload }} KB/s <br>
     Disk I/O ↑ {{ .Metrics.DiskRead }} KB/s ↓ {{ .Metrics.DiskWrite }} KB/s <br>
     CPU Temp: {{ .Metrics.CpuTemp }}°C <br>
-    Uptime: {{ .Metrics.Uptime }}<br>
+    Uptime: {{ .FormattedUptime }}<br>
 
 </div>
 {{ else }}

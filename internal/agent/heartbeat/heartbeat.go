@@ -76,6 +76,7 @@ func (h *HeartbeatService) SendHeartbeat() error {
 			DiskRead:        metrics.DiskReadKB,
 			DiskWrite:       metrics.DiskWriteKB,
 			CpuTemp:         metrics.CPUTemp,
+			Uptime:          metrics.Uptime,
 		},
 	}
 	logger.Info("Sending heartbeat request.... Hostname: ", hostname)
