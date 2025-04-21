@@ -41,8 +41,8 @@ func NewServerStore(bufferSize int) *ServerStore {
 func (s *ServerStore) AddOrUpdateAgent(req *pb.HeartbeatRequest) {
 	s.Lock()
 	defer s.Unlock()
-	logger.Debugf("Adding/updating agent: %s", req.Hostname)
-	agent, exists := s.agents[req.Hostname]
+	logger.Debugf("Adding/updating agent: %s", req.AgentId)
+	agent, exists := s.agents[req.AgentId]
 	if !exists {
 		logger.Debugf("Creating new agent entry for: %s", req.Hostname)
 		agent = &AgentData{
@@ -51,7 +51,7 @@ func (s *ServerStore) AddOrUpdateAgent(req *pb.HeartbeatRequest) {
 			OS:             req.Os,
 			MetricsHistory: make([]MetricEntry, s.bufferSize),
 		}
-		s.agents[req.Hostname] = agent
+		s.agents[req.AgentId] = agent
 	}
 
 	agent.LastSeen = time.Now()
@@ -71,11 +71,11 @@ func (s *ServerStore) AddOrUpdateAgent(req *pb.HeartbeatRequest) {
 	logger.Debugf("added to the index: %d", agent.metricsIndex)
 }
 
-func (s *ServerStore) GetAgentData(hostname string) (*AgentData, bool) {
+func (s *ServerStore) GetAgentData(agentId string) (*AgentData, bool) {
 	s.Lock()
 	defer s.Unlock()
 
-	agent, exists := s.agents[hostname]
+	agent, exists := s.agents[agentId]
 	if !exists {
 		return nil, false
 	}
