@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"net"
-	"time"
 
 	"github.com/mansoormajeed/glimpse/internal/common/logger"
 	"github.com/mansoormajeed/glimpse/internal/common/logger/util"
@@ -19,7 +18,7 @@ type GlimpseServer struct {
 // NewGlimpseServer creates a new instance of GlimpseServer
 func NewGlimpseServer() *GlimpseServer {
 	return &GlimpseServer{
-		store: NewServerStore(60), // Set the buffer size to 60 for 1 minute
+		store: NewServerStore(5), // for now use buffer 5. later change to 60
 	}
 }
 
@@ -27,32 +26,8 @@ func (s *GlimpseServer) Heartbeat(ctx context.Context, req *pb.HeartbeatRequest)
 	// Log the heartbeat request
 	logger.Debugf("Received heartbeat : %v", req)
 
-	s.store.Lock()
-	defer s.store.Unlock()
-
-	agent, exists := s.store.agents[req.Hostname]
-	if !exists {
-		agent = &AgentData{
-			Hostname:       req.Hostname,
-			OS:             req.Os,
-			MetricsHistory: make([]MetricEntry, s.store.bufferSize),
-		}
-		s.store.agents[req.Hostname] = agent
-	}
-
-	agent.LastSeen = time.Now()
-	agent.ConnectedFor = time.Duration(req.ConnectedFor) * time.Second
-
-	// add to the ring buffer
-	entry := MetricEntry{
-		Timestamp: time.Now(),
-		Metrics:   req.Metrics,
-	}
-	agent.MetricsHistory[agent.metricsIndex] = entry
-	agent.metricsIndex = (agent.metricsIndex + 1) % s.store.bufferSize
-	if agent.metricsCount < s.store.bufferSize {
-		agent.metricsCount++
-	}
+	s.store.AddOrUpdateAgent(req)
+	logger.Debugf("updated agent: %v", req.Hostname)
 
 	resp := &pb.HeartbeatResponse{
 		Message:      "Heartbeat received",
