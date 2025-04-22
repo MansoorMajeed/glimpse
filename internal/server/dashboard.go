@@ -55,7 +55,7 @@ func StartHTTPServer(store *ServerStore) {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
 	go func() {
-		if err := http.ListenAndServe(":5000", nil); err != nil {
+		if err := http.ListenAndServe("0.0.0.0:5000", nil); err != nil {
 			logger.Fatalf("Failed to start HTTP server: %v", err)
 		}
 	}()
