@@ -4,6 +4,7 @@ import (
 	"embed"
 	"html/template"
 	"net/http"
+	"sort"
 
 	"github.com/mansoormajeed/glimpse/internal/common/logger"
 	pb "github.com/mansoormajeed/glimpse/pkg/pb/proto"
@@ -30,6 +31,10 @@ func StartHTTPServer(store *ServerStore) {
 
 		rawAgents := store.GetAllAgents()
 		agentList := make([]DashboardAgent, 0, len(rawAgents))
+
+		sort.Slice(rawAgents, func(i, j int) bool {
+			return rawAgents[i].Hostname < rawAgents[j].Hostname
+		})
 
 		for _, a := range rawAgents {
 			latest := a.Latest()
