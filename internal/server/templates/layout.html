@@ -1,19 +1,51 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Glimpse Dashboard</title>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚡️</text></svg>">
     <style>
-        body { font-family: sans-serif; padding: 20px; background: #f6f6f6; }
-        .agent-card { background: white; padding: 10px; margin: 10px 0; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,0.1); }
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2a2a2a;
+            --text-color: #f0f0f0;
+            --primary-color: #00aaff;
+            --border-color: #444;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .header h1 {
+            color: var(--primary-color);
+            margin: 0;
+        }
+        #agents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
-    <h1>Glimpse</h1>
+    <div class="header">
+        <h1>Glimpse</h1>
+    </div>
 
-    <div id="agents" hx-get="/agents" hx-trigger="every 1s" hx-swap="innerHTML">
-        Loading agents...
+    <div id="agents-grid" hx-get="/agents" hx-trigger="every 1s" hx-swap="innerHTML">
+        <!-- Agent cards will be loaded here -->
     </div>
 </body>
 </html>

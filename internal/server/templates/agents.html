@@ -1,14 +1,64 @@
 {{ range . }}
+<style>
+.agent-card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s ease-in-out;
+}
+.agent-card:hover {
+    box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+}
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+.hostname {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+.os {
+    font-style: italic;
+    color: #aaa;
+}
+.metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+.metric {
+    background: #333;
+    padding: 10px;
+    border-radius: 8px;
+}
+.metric-label {
+    font-weight: bold;
+}
+</style>
 <div class="agent-card">
-    <strong>{{ .Hostname }}</strong> ({{ .OS }})<br>
-    Last seen: {{ .LastSeenAgo }}<br>
-    CPU: {{ .Metrics.CpuUsage }}% | Mem: {{ .Metrics.MemoryUsage }}% | Disk: {{ .Metrics.DiskUsage }}% <br>
-    Net ↑ {{ .Metrics.NetworkUpload }} KB/s ↓ {{ .Metrics.NetworkDownload }} KB/s <br>
-    Disk I/O ↑ {{ .Metrics.DiskRead }} KB/s ↓ {{ .Metrics.DiskWrite }} KB/s <br>
-    CPU Temp: {{ .Metrics.CpuTemp }}°C <br>
-    Uptime: {{ .FormattedUptime }}<br>
-
+    <div class="card-header">
+        <div class="hostname">{{ .Hostname }}</div>
+        <div class="os">{{ .OS }}</div>
+    </div>
+    <div class="metrics-grid">
+        <div class="metric"><span class="metric-label">CPU:</span> {{ .Metrics.CpuUsage }}%</div>
+        <div class="metric"><span class="metric-label">Mem:</span> {{ .Metrics.MemoryUsage }}%</div>
+        <div class="metric"><span class="metric-label">Disk:</span> {{ .Metrics.DiskUsage }}%</div>
+        <div class="metric"><span class="metric-label">Net ↑:</span> {{ .Metrics.NetworkUpload }} KB/s</div>
+        <div class="metric"><span class="metric-label">Net ↓:</span> {{ .Metrics.NetworkDownload }} KB/s</div>
+        <div class="metric"><span class="metric-label">Disk R:</span> {{ .Metrics.DiskRead }} KB/s</div>
+        <div class="metric"><span class="metric-label">Disk W:</span> {{ .Metrics.DiskWrite }} KB/s</div>
+        <div class="metric"><span class="metric-label">CPU Temp:</span> {{ .Metrics.CpuTemp }}°C</div>
+    </div>
+    <div style="margin-top: 15px; font-size: 0.9em; color: #aaa;">
+        Uptime: {{ .FormattedUptime }} | Last seen: {{ .LastSeenAgo }}
+    </div>
 </div>
 {{ else }}
-<div>No agents currently online.</div>
+<div style="text-align: center; padding: 50px; font-size: 1.2em;">No agents currently online.</div>
 {{ end }}
