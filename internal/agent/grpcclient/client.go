@@ -1,6 +1,8 @@
 package grpcclient
 
 import (
+	"os"
+
 	pb "github.com/mansoormajeed/glimpse/pkg/pb/proto"
 	"google.golang.org/grpc"
 )
@@ -10,10 +12,15 @@ type GlimpseServiceClient struct {
 }
 
 func NewGlimpseServiceClient() (*GlimpseServiceClient, error) {
-
 	var opts []grpc.DialOption
 
-	conn, err := grpc.NewClient("localhost:5001", opts...)
+	// Get server address from environment variable or use default
+	serverAddr := os.Getenv("SERVER_ADDRESS")
+	if serverAddr == "" {
+		serverAddr = "localhost:5001" // Default fallback
+	}
+
+	conn, err := grpc.NewClient(serverAddr, opts...)
 	if err != nil {
 		return nil, err
 	}

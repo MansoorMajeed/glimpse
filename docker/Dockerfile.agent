@@ -4,13 +4,13 @@ FROM golang:1.24.0-alpine AS builder
 WORKDIR /app
 
 # Copy go mod and sum files
-COPY ../go.mod ../go.sum ./
+COPY go.mod go.sum ./
 
 # Download all dependencies
 RUN go mod download
 
 # Copy the source code
-COPY ../. .
+COPY . .
 
 # Build the application
 RUN CGO_ENABLED=0 GOOS=linux go build -o agent ./cmd/agent
@@ -23,9 +23,7 @@ WORKDIR /app
 # Copy the binary from builder
 COPY --from=builder /app/agent .
 
-# Create a non-root user
-RUN adduser -D -g '' appuser
-USER appuser
-
+# The agent needs to run as root to access system metrics
 # Command to run the executable
+ENTRYPOINT ["./agent"]
 ENTRYPOINT ["./agent"] 

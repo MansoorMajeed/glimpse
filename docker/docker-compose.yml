@@ -5,13 +5,14 @@ services:
       context: ..
       dockerfile: docker/Dockerfile.server
     ports:
-      - "5000:5000"
-      - "5001:5001"
+      - "5000:5000"  # HTTP dashboard
+      - "5001:5001"  # gRPC
     environment:
       - LOG_LEVEL=debug
     command: ["-debug"]
     networks:
       - glimpse-network
+    restart: unless-stopped
 
   agent:
     build:
@@ -19,16 +20,19 @@ services:
       dockerfile: docker/Dockerfile.agent
     environment:
       - LOG_LEVEL=debug
-      - SERVER_ADDRESS=server:5001
+      - SERVER_ADDRESS=server:5001  # Use the service name to connect
     volumes:
       - /proc:/proc:ro
       - /sys:/sys:ro
       - /:/rootfs:ro
-    privileged: true
+    privileged: true  # Needed for system metrics
     cap_add:
       - SYS_ADMIN
     networks:
       - glimpse-network
+    restart: unless-stopped
+    depends_on:
+      - server
 
 networks:
   glimpse-network:
