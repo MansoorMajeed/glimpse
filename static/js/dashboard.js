@@ -31,18 +31,24 @@ async function updateDashboard() {
         // Clean up disconnected agents
         cleanupOldCharts(currentAgents);
         
+        // Remove loading message on first successful update
+        const agentsContainer = document.getElementById('agents');
+        const loadingMsg = agentsContainer.querySelector('.loading');
+        if (loadingMsg && agents.length > 0) {
+            loadingMsg.remove();
+        }
+        
         // Update each agent
         agents.forEach(agent => {
             updateAgentCard(agent);
             createOrUpdateChart(agent.Hostname, {
                 cpu: agent.Metrics.cpu_usage,
                 memory: agent.Metrics.memory_usage,
-                disk: agent.Metrics.disk_usage
+                temp: agent.Metrics.cpu_temp
             });
         });
         
         // Handle no agents case
-        const agentsContainer = document.getElementById('agents');
         if (agents.length === 0 && !agentsContainer.querySelector('.no-agents')) {
             agentsContainer.innerHTML = '<div class="no-agents">No agents currently online.</div>';
         }
@@ -85,10 +91,14 @@ function updateAgentCard(agent) {
 function createAgentCard(agent) {
     const agentsContainer = document.getElementById('agents');
     
-    // Remove "no agents" message if it exists
+    // Remove "no agents" or "loading" message if it exists
     const noAgentsMsg = agentsContainer.querySelector('.no-agents');
+    const loadingMsg = agentsContainer.querySelector('.loading');
     if (noAgentsMsg) {
         noAgentsMsg.remove();
+    }
+    if (loadingMsg) {
+        loadingMsg.remove();
     }
     
     const cardHTML = `
@@ -176,7 +186,7 @@ function createOrUpdateChart(hostname, metrics) {
             timestamps: [],
             cpu: [],
             memory: [],
-            disk: []
+            temp: []
         };
     }
     
@@ -187,7 +197,7 @@ function createOrUpdateChart(hostname, metrics) {
     data.timestamps.push(now);
     data.cpu.push(metrics.cpu);
     data.memory.push(metrics.memory);
-    data.disk.push(metrics.disk);
+    data.temp.push(metrics.temp);
     
     // Keep only last 15 data points for performance
     const maxPoints = 15;
@@ -195,7 +205,7 @@ function createOrUpdateChart(hostname, metrics) {
         data.timestamps.shift();
         data.cpu.shift();
         data.memory.shift();
-        data.disk.shift();
+        data.temp.shift();
     }
     
     // Create chart if it doesn't exist, otherwise update data
@@ -237,10 +247,10 @@ function createChart(hostname, canvas, data) {
                     pointHoverRadius: 3
                 },
                 {
-                    label: 'Disk',
-                    data: data.disk,
-                    borderColor: '#48bb78',
-                    backgroundColor: 'rgba(72, 187, 120, 0.1)',
+                    label: 'Temp',
+                    data: data.temp,
+                    borderColor: '#e53e3e',
+                    backgroundColor: 'rgba(229, 62, 62, 0.1)',
                     borderWidth: 1.5,
                     fill: false,
                     tension: 0.3,
@@ -274,7 +284,6 @@ function createChart(hostname, canvas, data) {
                 },
                 y: {
                     beginAtZero: true,
-                    max: 100,
                     display: true,
                     grid: {
                         color: 'rgba(0,0,0,0.08)',
@@ -285,10 +294,7 @@ function createChart(hostname, canvas, data) {
                         font: {
                             size: 8
                         },
-                        maxTicksLimit: 4,
-                        callback: function(value) {
-                            return value + '%';
-                        }
+                        maxTicksLimit: 4
                     }
                 }
             },
@@ -307,7 +313,7 @@ function updateChart(hostname, data) {
     chart.data.labels = data.timestamps.map(() => '');
     chart.data.datasets[0].data = [...data.cpu];
     chart.data.datasets[1].data = [...data.memory];
-    chart.data.datasets[2].data = [...data.disk];
+    chart.data.datasets[2].data = [...data.temp];
     
     chart.update('none'); // Update without animation to prevent flicker
 }
