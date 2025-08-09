@@ -66,14 +66,6 @@
         Last seen {{ .LastSeenAgo }}
     </div>
 </div>
-
-<script>
-    createOrUpdateChart('{{ .Hostname }}', {
-        cpu: {{ .Metrics.CpuUsage }},
-        memory: {{ .Metrics.MemoryUsage }},
-        disk: {{ .Metrics.DiskUsage }}
-    });
-</script>
 {{ else }}
 <div class="no-agents">No agents currently online.</div>
 {{ end }}

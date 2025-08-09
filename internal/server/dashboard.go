@@ -2,6 +2,7 @@ package server
 
 import (
 	"embed"
+	"encoding/json"
 	"html/template"
 	"net/http"
 
@@ -50,6 +51,28 @@ func StartHTTPServer(store *ServerStore) {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
+	})
+
+	http.HandleFunc("/agents/data", func(w http.ResponseWriter, r *http.Request) {
+		rawAgents := store.GetAllAgents()
+		agentList := make([]DashboardAgent, 0, len(rawAgents))
+
+		for _, a := range rawAgents {
+			latest := a.Latest()
+			if latest == nil {
+				continue
+			}
+			agentList = append(agentList, DashboardAgent{
+				Hostname:        a.Hostname,
+				OS:              a.OS,
+				LastSeenAgo:     formatRelative(a.LastSeen),
+				Metrics:         latest,
+				FormattedUptime: formatUptime(latest.Uptime),
+			})
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(agentList)
 	})
 
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
