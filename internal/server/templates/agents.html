@@ -10,15 +10,15 @@
     
     <div class="metrics-grid">
         <div class="metric-item cpu">
-            <div class="metric-icon">🔥</div>
+            <div class="metric-icon">⚡</div>
             <div class="metric-content">
-                <div class="metric-label">CPU Usage</div>
+                <div class="metric-label">CPU</div>
                 <div class="metric-value">{{ .Metrics.CpuUsage }}%</div>
             </div>
         </div>
         
         <div class="metric-item memory">
-            <div class="metric-icon">💾</div>
+            <div class="metric-icon">▣</div>
             <div class="metric-content">
                 <div class="metric-label">Memory</div>
                 <div class="metric-value">{{ .Metrics.MemoryUsage }}%</div>
@@ -26,31 +26,31 @@
         </div>
         
         <div class="metric-item disk">
-            <div class="metric-icon">💽</div>
+            <div class="metric-icon">◉</div>
             <div class="metric-content">
-                <div class="metric-label">Disk Usage</div>
+                <div class="metric-label">Disk</div>
                 <div class="metric-value">{{ .Metrics.DiskUsage }}%</div>
             </div>
         </div>
         
         <div class="metric-item network">
-            <div class="metric-icon">🌐</div>
+            <div class="metric-icon">⟲</div>
             <div class="metric-content">
                 <div class="metric-label">Network</div>
-                <div class="metric-value">↑{{ .Metrics.NetworkUpload }} ↓{{ .Metrics.NetworkDownload }} KB/s</div>
+                <div class="metric-value">↑{{ .Metrics.NetworkUpload }} ↓{{ .Metrics.NetworkDownload }}</div>
             </div>
         </div>
         
         <div class="metric-item temp">
-            <div class="metric-icon">🌡️</div>
+            <div class="metric-icon">◐</div>
             <div class="metric-content">
-                <div class="metric-label">CPU Temp</div>
+                <div class="metric-label">Temp</div>
                 <div class="metric-value">{{ .Metrics.CpuTemp }}°C</div>
             </div>
         </div>
         
         <div class="metric-item uptime">
-            <div class="metric-icon">⏱️</div>
+            <div class="metric-icon">○</div>
             <div class="metric-content">
                 <div class="metric-label">Uptime</div>
                 <div class="metric-value">{{ .FormattedUptime }}</div>
@@ -59,7 +59,7 @@
     </div>
     
     <div class="chart-container">
-        <canvas id="chart-{{ .Hostname }}" width="400" height="120"></canvas>
+        <canvas id="chart-{{ .Hostname }}"></canvas>
     </div>
     
     <div class="last-seen">
@@ -68,136 +68,11 @@
 </div>
 
 <script>
-(function() {
-    const hostname = '{{ .Hostname }}';
-    const chartId = 'chart-' + hostname;
-    const canvas = document.getElementById(chartId);
-    
-    if (!canvas) return;
-    
-    // Store historical data in a global object
-    if (!window.agentData) window.agentData = {};
-    if (!window.agentData[hostname]) {
-        window.agentData[hostname] = {
-            timestamps: [],
-            cpu: [],
-            memory: [],
-            disk: []
-        };
-    }
-    
-    const data = window.agentData[hostname];
-    const now = new Date();
-    
-    // Add current data point
-    data.timestamps.push(now);
-    data.cpu.push({{ .Metrics.CpuUsage }});
-    data.memory.push({{ .Metrics.MemoryUsage }});
-    data.disk.push({{ .Metrics.DiskUsage }});
-    
-    // Keep only last 20 data points
-    if (data.timestamps.length > 20) {
-        data.timestamps.shift();
-        data.cpu.shift();
-        data.memory.shift();
-        data.disk.shift();
-    }
-    
-    // Destroy existing chart if it exists
-    if (window.charts && window.charts[hostname]) {
-        window.charts[hostname].destroy();
-    }
-    
-    // Initialize charts object
-    if (!window.charts) window.charts = {};
-    
-    const ctx = canvas.getContext('2d');
-    window.charts[hostname] = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: data.timestamps.map(() => ''),
-            datasets: [
-                {
-                    label: 'CPU %',
-                    data: data.cpu,
-                    borderColor: '#f56565',
-                    backgroundColor: 'rgba(245, 101, 101, 0.1)',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    pointHoverRadius: 4
-                },
-                {
-                    label: 'Memory %',
-                    data: data.memory,
-                    borderColor: '#4299e1',
-                    backgroundColor: 'rgba(66, 153, 225, 0.1)',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    pointHoverRadius: 4
-                },
-                {
-                    label: 'Disk %',
-                    data: data.disk,
-                    borderColor: '#48bb78',
-                    backgroundColor: 'rgba(72, 187, 120, 0.1)',
-                    borderWidth: 2,
-                    fill: false,
-                    tension: 0.4,
-                    pointRadius: 0,
-                    pointHoverRadius: 4
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    labels: {
-                        usePointStyle: true,
-                        boxWidth: 6,
-                        font: {
-                            size: 11
-                        }
-                    }
-                }
-            },
-            scales: {
-                x: {
-                    display: false
-                },
-                y: {
-                    beginAtZero: true,
-                    max: 100,
-                    grid: {
-                        color: 'rgba(0,0,0,0.1)'
-                    },
-                    ticks: {
-                        font: {
-                            size: 10
-                        },
-                        callback: function(value) {
-                            return value + '%';
-                        }
-                    }
-                }
-            },
-            interaction: {
-                intersect: false,
-                mode: 'index'
-            },
-            animation: {
-                duration: 300
-            }
-        }
+    createOrUpdateChart('{{ .Hostname }}', {
+        cpu: {{ .Metrics.CpuUsage }},
+        memory: {{ .Metrics.MemoryUsage }},
+        disk: {{ .Metrics.DiskUsage }}
     });
-})();
 </script>
 {{ else }}
 <div class="no-agents">No agents currently online.</div>
